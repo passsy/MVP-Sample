@@ -20,14 +20,12 @@ import android.widget.TextView;
 import net.grandcentrix.thirtyinch.TiFragment;
 
 import java.util.List;
-import java.util.Random;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import pl.fzymek.gettyimagesmodel.gettyimages.Image;
 import pl.fzymek.simplegallery.R;
-import pl.fzymek.simplegallery.config.Config;
 import pl.fzymek.simplegallery.details.DetailsFragment;
 import pl.fzymek.simplegallery.util.ImageTransition;
 import pl.fzymek.simplegallery.util.SpaceDecoration;
@@ -105,12 +103,6 @@ public class GalleryFragment extends TiFragment<GalleryPresenter, GalleryView> i
         unbinder.unbind();
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        loadData(false);
-    }
-
     @NonNull
     @Override
     public GalleryPresenter providePresenter() {
@@ -119,42 +111,35 @@ public class GalleryFragment extends TiFragment<GalleryPresenter, GalleryView> i
     }
 
     @Override
-    public void startLoading(boolean pullToRefresh) {
-        progressBar.setVisibility(View.VISIBLE);
-        contentView.setVisibility(View.GONE);
-        error.setVisibility(View.GONE);
-        contentView.setRefreshing(pullToRefresh);
-    }
+    public void showLoadingIndicator(boolean loading) {
+        if (loading && contentView.isRefreshing()) {
+            //already showing PTR loading indicator
+            return;
+        }
+        if (!loading) {
+            contentView.setRefreshing(false);
+        }
 
-    @Override
-    public void stopLoading() {
-        contentView.setVisibility(View.VISIBLE);
-        progressBar.setVisibility(View.GONE);
-        error.setVisibility(View.GONE);
-        contentView.setRefreshing(false);
+        progressBar.setVisibility(loading ? View.VISIBLE : View.GONE);
     }
 
     @Override
     public void showError(Throwable err) {
         error.setVisibility(View.VISIBLE);
         contentView.setVisibility(View.GONE);
-        progressBar.setVisibility(View.GONE);
         contentView.setRefreshing(false);
     }
 
     @Override
     public void showGallery(List<Image> images) {
         adapter.setData(images);
+        error.setVisibility(View.GONE);
+        contentView.setVisibility(View.VISIBLE);
     }
 
     @Override
     public void onRefresh() {
-        loadData(true);
-    }
-
-    private void loadData(boolean pullToRefresh) {
-        String phrase = Config.QUERIES[new Random().nextInt(Config.QUERIES.length)];
-        getPresenter().loadData(phrase, pullToRefresh);
+        getPresenter().onRefresh();
     }
 }
 
