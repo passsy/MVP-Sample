@@ -63,6 +63,7 @@ class GalleryPresenter extends TiPresenter<GalleryView> {
     protected void onDestroy() {
         super.onDestroy();
         Timber.d("onDestroy");
+        cancelRequest();
     }
 
     @Override
@@ -80,56 +81,65 @@ class GalleryPresenter extends TiPresenter<GalleryView> {
 
 
     public void loadData(String phrase) {
+        Timber.d("loadData() called with: phrase = [" + phrase + "]");
+        cancelRequest();
+
         clearData();
 
-        if (mRefreshSubscription != null && !mRefreshSubscription.isUnsubscribed()) {
-            // cancel running request
-            mRefreshSubscription.unsubscribe();
-        }
-
         mRefreshSubscription = service.getImages(phrase)
-                .doOnSubscribe(() -> setLoading(true))
-                .doOnTerminate(() -> setLoading(false))
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe(() -> setLoading(true))
+                .doAfterTerminate(() -> {
+                    setLoading(false);
+                    updateView();
+                })
                 .subscribe(
                         result -> {
                             GalleryPresenter.this.result = result;
-                            updateView();
+                            Timber.d("loaded images: " + result.getImages().size());
                         },
                         error -> {
                             GalleryPresenter.this.error = error;
-                            updateView();
+                            Timber.d("got error: " + error);
                         }
                 );
     }
 
     private void updateView() {
-        Timber.d("updateView");
-        if (!isAwake())
+        final GalleryView view = getView();
+        if (view == null) {
+            Timber.d("not updating view. view == null");
             return;
-
-        if (error != null) {
-            Timber.d("showError");
-            getView().showError(error);
         }
+        Timber.d("updateView");
 
-        getView().showLoadingIndicator(loading);
+        view.showError(error);
+
+        view.showLoadingIndicator(loading);
 
         List<Image> images = new ArrayList<>();
         if (result != null) {
             images = result.getImages();
         }
-        getView().showGallery(images);
+        view.showGallery(images);
     }
 
     private void clearData() {
+        Timber.d("clear data");
         result = null;
+        error = null;
         updateView();
     }
 
     private void setLoading(boolean loading) {
         this.loading = loading;
         updateView();
+    }
+
+    private void cancelRequest() {
+        if (mRefreshSubscription != null && !mRefreshSubscription.isUnsubscribed()) {
+            mRefreshSubscription.unsubscribe();
+        }
     }
 }

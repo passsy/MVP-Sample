@@ -1,39 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.design.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <android.support.design.widget.AppBarLayout
-        android:layout_gravity="top"
+        android:layout_width="match_parent"
         android:layout_height="?android:attr/actionBarSize"
-        android:layout_width="match_parent">
+        android:layout_gravity="top">
 
-            <android.support.v7.widget.Toolbar
-                android:id="@+id/toolbar"
-                android:layout_height="?attr/actionBarSize"
-                android:layout_width="match_parent">
-            </android.support.v7.widget.Toolbar>
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"></android.support.v7.widget.Toolbar>
     </android.support.design.widget.AppBarLayout>
 
     <FrameLayout
-        android:padding="8dp"
-        android:layout_marginTop="?android:attr/actionBarSize"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_marginTop="?android:attr/actionBarSize"
+        android:padding="8dp">
 
         <ProgressBar
             android:id="@+id/progress"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:indeterminate="true"/>
+            android:indeterminate="true"
+            android:visibility="gone" />
 
         <android.support.v4.widget.SwipeRefreshLayout
             android:id="@+id/contentView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:visibility="gone">
 
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/recyclerView"
@@ -41,16 +41,22 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 tools:context="pl.fzymek.simplegallery.gallery.GalleryFragment"
-                tools:listitem="@layout/fragment_gallery_item"/>
+                tools:listitem="@layout/fragment_gallery_item" />
 
         </android.support.v4.widget.SwipeRefreshLayout>
 
-        <TextView
-            tools:text="Error happened! :("
-            android:id="@+id/error"
-            android:layout_gravity="center"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+        <android.support.v4.widget.SwipeRefreshLayout
+            android:id="@+id/errorView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="Error happened! :(" />
+        </android.support.v4.widget.SwipeRefreshLayout>
 
     </FrameLayout>
 

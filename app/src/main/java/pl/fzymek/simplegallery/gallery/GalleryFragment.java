@@ -15,9 +15,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import net.grandcentrix.thirtyinch.TiFragment;
+import net.grandcentrix.thirtyinch.distinctuntilchanged.DistinctUntilChangedInterceptor;
 
 import java.util.List;
 
@@ -37,8 +37,8 @@ public class GalleryFragment extends TiFragment<GalleryPresenter, GalleryView> i
     RecyclerView recyclerView;
     @BindView(R.id.progress)
     ProgressBar progressBar;
-    @BindView(R.id.error)
-    TextView error;
+    @BindView(R.id.errorView)
+    SwipeRefreshLayout errorView;
     @BindView(R.id.contentView)
     SwipeRefreshLayout contentView;
     @BindView(R.id.toolbar)
@@ -67,9 +67,10 @@ public class GalleryFragment extends TiFragment<GalleryPresenter, GalleryView> i
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         unbinder = ButterKnife.bind(this, view);
-        ((AppCompatActivity)getActivity()).setSupportActionBar(toolbar);
-        ((AppCompatActivity)getActivity()).getSupportActionBar().setHomeButtonEnabled(false);
+        ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
+        ((AppCompatActivity) getActivity()).getSupportActionBar().setHomeButtonEnabled(false);
         contentView.setOnRefreshListener(this);
+        errorView.setOnRefreshListener(this);
 
         Context context = view.getContext();
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
@@ -80,7 +81,15 @@ public class GalleryFragment extends TiFragment<GalleryPresenter, GalleryView> i
 
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.addItemDecoration(new SpaceDecoration());
+        recyclerView.setHasFixedSize(true);
         recyclerView.setAdapter(adapter);
+
+        // manually clear DistinctUntilChanged cache
+        // workaround for issue: https://github.com/grandcentrix/ThirtyInch/issues/29
+        // not required when @DistinctUntilChanged isn't used. Only wrong Fragments, not Activity
+        final DistinctUntilChangedInterceptor distinctUntilChangedInterceptor = (DistinctUntilChangedInterceptor)
+                getInterceptors(interceptor -> interceptor instanceof DistinctUntilChangedInterceptor).get(0);
+        distinctUntilChangedInterceptor.clearCache(this);
     }
 
     void openDetails(View view, Image image) {
@@ -91,7 +100,7 @@ public class GalleryFragment extends TiFragment<GalleryPresenter, GalleryView> i
 //        setSharedElementReturnTransition(sharedElementEnterTransition);
         fm.beginTransaction()
                 .replace(R.id.content, fragment)
-                .addSharedElement(view.findViewById(R.id.image), "transition_"+image.getId())
+                .addSharedElement(view.findViewById(R.id.image), "transition_" + image.getId())
                 .addToBackStack(null)
                 .commit();
 
@@ -112,12 +121,15 @@ public class GalleryFragment extends TiFragment<GalleryPresenter, GalleryView> i
 
     @Override
     public void showLoadingIndicator(boolean loading) {
-        if (loading && contentView.isRefreshing()) {
-            //already showing PTR loading indicator
-            return;
-        }
-        if (!loading) {
+        Timber.d("showLoadingIndicator() called with: loading = [" + loading + "]");
+        if (loading) {
+            if (contentView.isRefreshing() || errorView.isRefreshing()) {
+                //already showing PTR loading indicator
+                return;
+            }
+        } else {
             contentView.setRefreshing(false);
+            errorView.setRefreshing(false);
         }
 
         progressBar.setVisibility(loading ? View.VISIBLE : View.GONE);
@@ -125,20 +137,20 @@ public class GalleryFragment extends TiFragment<GalleryPresenter, GalleryView> i
 
     @Override
     public void showError(Throwable err) {
-        error.setVisibility(View.VISIBLE);
-        contentView.setVisibility(View.GONE);
-        contentView.setRefreshing(false);
+        Timber.d("showError " + err);
+        errorView.setVisibility(err == null ? View.GONE : View.VISIBLE);
     }
 
     @Override
     public void showGallery(List<Image> images) {
+        Timber.d("showGallery images:" + images.size() + " " + images.hashCode());
         adapter.setData(images);
-        error.setVisibility(View.GONE);
-        contentView.setVisibility(View.VISIBLE);
+        contentView.setVisibility(images.isEmpty() ? View.GONE : View.VISIBLE);
     }
 
     @Override
     public void onRefresh() {
+        Timber.v("onRefresh() called");
         getPresenter().onRefresh();
     }
 }

@@ -1,8 +1,8 @@
-
 package pl.fzymek.gettyimagesmodel.gettyimages;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class GettySearchResult {
@@ -10,7 +10,7 @@ public class GettySearchResult {
     @SerializedName("result_count")
     Integer resultCount;
     @SerializedName("images")
-    List<Image> images;
+    List<Image> images = new ArrayList<>();
 
     public Integer getResultCount() {
         return resultCount;

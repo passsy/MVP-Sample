@@ -108,6 +108,37 @@ public class Image implements Parcelable {
     public Image() {
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Image)) return false;
+
+        Image image = (Image) o;
+
+        if (id != null ? !id.equals(image.id) : image.id != null) return false;
+        if (caption != null ? !caption.equals(image.caption) : image.caption != null) return false;
+        if (title != null ? !title.equals(image.title) : image.title != null) return false;
+        if (artist != null ? !artist.equals(image.artist) : image.artist != null) return false;
+        if (collectionName != null ? !collectionName.equals(image.collectionName) : image.collectionName != null)
+            return false;
+        if (dateCreated != null ? !dateCreated.equals(image.dateCreated) : image.dateCreated != null)
+            return false;
+        return displaySizes != null ? displaySizes.equals(image.displaySizes) : image.displaySizes == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = id != null ? id.hashCode() : 0;
+        result = 31 * result + (caption != null ? caption.hashCode() : 0);
+        result = 31 * result + (title != null ? title.hashCode() : 0);
+        result = 31 * result + (artist != null ? artist.hashCode() : 0);
+        result = 31 * result + (collectionName != null ? collectionName.hashCode() : 0);
+        result = 31 * result + (dateCreated != null ? dateCreated.hashCode() : 0);
+        result = 31 * result + (displaySizes != null ? displaySizes.hashCode() : 0);
+        return result;
+    }
+
     protected Image(Parcel in) {
         this.id = in.readString();
         this.caption = in.readString();
